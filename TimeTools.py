@@ -46,7 +46,7 @@ def segment_time_ADJUST (time_slice, Fs, DATA_raw_events, DATA_acu_events):
 
     for eve in range(DATA_acu_events.shape[0]):
         data = abs(DATA_acu_events[eve,:,4])
-        DATA_acu_events_medianf[eve,:] = ss.medfilt(data,45)
+        DATA_acu_events_medianf[eve,:] = ss.medfilt(data,55)
         
     qq_index_max = np.argmax(DATA_acu_events_medianf,axis=1)
 
@@ -185,6 +185,7 @@ def SEL_calc (DATA_acu_events, Fs):
             LL      =  DATA_acu_events[eve,:,chann]#levels
             ref     = LL >= M[chann]-10
             levels  = LL[ref]# values Lmax - 10dB
+            #p       = DATA_raw_events[eve,:,chann][ref]
             ts      = levels.shape[0] #time samples
             te      = ts/Fs
             
@@ -212,26 +213,33 @@ def round_up(n,jump,decimals=-1):
 
 # %% Segment data based on trheshold
 # ##########################################################################
-def segment_THRESH (THRESH,Fs, Data_raw_segmented, Data_acu_segmented):
-    cha_r = 4 # mic of refference
-    Lmax = np.max(Data_acu_segmented[:,:,cha_r]) # Lmax in the channel refference
-    Query = np.where(Data_acu_segmented==Lmax) # indexes of the LMAX
-    LL = np.squeeze(Data_acu_segmented[Query[0],:,Query[2]])
+def segment_THRESH (THRESH,Fs, Data_raw_segmented, Data_acu_segmented,microphone):
+    cha_r = microphone # mic of refference{1,2,3,4,5,6,7,8,9} 
+    segment_by_THRESH_events_acu = []
+    segment_by_THRESH_events_raw = []
     
-    ref = LL >= Lmax - THRESH
+    for eve in range(Data_acu_segmented.shape[0]):
+        M   = np.max(Data_acu_segmented[eve,:,cha_r-1])
+        LL  =  Data_acu_segmented[eve,:,cha_r-1]#levels
+        ref = LL >= M-THRESH
+        
+        levels  = Data_acu_segmented[eve,ref,:]# USUALLY values Lmax - 10dB
+        press = Data_raw_segmented[eve,ref,:]# correspondig pressure points
+                
+        segment_by_THRESH_events_acu.append(levels)
+        segment_by_THRESH_events_raw.append(press)
+        
+    print("next")
+        
+    #     Data_raw_segmented_trh = Data_raw_segmented[:,ref,:]
+    #     Data_acu_segmented_trh = Data_acu_segmented[:,ref,:]
     
-    fig, (ax0) = plt.subplots()
-    plt.plot(ref)
-             
-    Data_raw_segmented_trh = Data_raw_segmented[:,ref,:]
-    Data_acu_segmented_trh = Data_acu_segmented[:,ref,:]
+    # samples = Data_acu_segmented_trh.shape[1]
+    # TIME_r = np.linspace(-samples//2, samples//2, samples)/Fs
     
-    samples = Data_acu_segmented_trh.shape[1]
-    TIME_r = np.linspace(-samples//2, samples//2, samples)/Fs
-    
-    vec_time = np.linspace(0,samples,samples)
-    return TIME_r, vec_time, Data_raw_segmented_trh, Data_acu_segmented_trh 
-
+    # vec_time = np.linspace(0,samples,samples)
+    # return TIME_r, vec_time, Data_raw_segmented_trh, Data_acu_segmented_trh 
+    return segment_by_THRESH_events_acu, segment_by_THRESH_events_raw
 
 
 
