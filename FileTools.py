@@ -59,9 +59,9 @@ def list_files (PILOT,DroneID,HAGL,OPE,PYL,STA,DATE, COUNT):
     """
     
     """ HP """
-    # folder = "C:/Users/ses271/OneDrive - University of Salford/Documents/ARC_Salford/DroneNoiseMeas/Dewe_exports/" # put folder  with the h5 to process
+    folder = "C:/Users/ses271/OneDrive - University of Salford/Documents/ARC_Salford/DroneNoiseMeas/Dewe_exports/" # put folder  with the h5 to process
     """ ASUS """
-    folder = "C:/Users/Asus/OneDrive/OneDrive - University of Salford/Documents/ARC_Salford/DroneNoiseMeas/Dewe_exports/"
+    # folder = "C:/Users/Asus/OneDrive/OneDrive - University of Salford/Documents/ARC_Salford/DroneNoiseMeas/Dewe_exports/"
     subfolder = root_file = PILOT+'_'+DroneID+'_'+str(HAGL)+'_'+OPE+'_'+PYL+'_'+STA+'_'+DATE+'_'+COUNT+'/'
     
     root_file = PILOT+'_'+DroneID+'_'+str(HAGL)+'_'+OPE+'_'+PYL+'_'+STA+'_'+DATE+'_'
