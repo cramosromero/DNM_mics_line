@@ -5,7 +5,7 @@ Created on Tue Sep 20 11:08:08 2022
 @author: SES271@CR
 tests from Fabio's code.
 """
-
+import random
 import matplotlib.pyplot as plt
 import scienceplots #https://www.reddit.com/r/learnpython/comments/ila9xp/nice_plots_for_scientific_papers_theses_and/
 plt.style.use(['science', 'grid'])
@@ -15,9 +15,11 @@ plt.style.use(['science', 'grid'])
 from cycler import cycler
 line_cycler     = cycler(linestyle = ['-', '--', '-.', (0, (3, 1, 1, 1)), ':'])
 color_cycler    = cycler(color = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5'])
+marker_cycler    = cycler(marker = ['d', '*', '^', 's', 'X', '2'])
 line_color_cycler = (len(line_cycler)*color_cycler
                      + len(color_cycler)*line_cycler)
 lc = line_color_cycler()
+
 # import pandas as pd
 from matplotlib import rc
 # from matplotlib.ticker import (MultipleLocator, AutoMinorLocator)
@@ -33,7 +35,6 @@ import TimeTools
 
 plt.close('all')
 
-
 # %%% Constants
 # ###
 p_ref   = 20e-6
@@ -41,18 +42,17 @@ n_mics  = 9
 # #######
 ## %%  Noise RECORDINGS .mat files
 # ################################
-
+linestyle=random.choice(['-', '--', '-.', (0, (3, 1, 1, 1)), ':'])
 # FIELD MEASUREMENTS 
 PILOT   = 'Ed'
-DroneID = 'M3' #{M3, 3p, Yn,Fp}
+DroneID = 'Yn' #{M3, 3p, Yn,Fp}
 HAGL    = 10
 OPE     = 'F15' #{F15, F05, F27}
-PYL     = 'N' #{Y, N}
+PYL     = 'Y' #{Y, N}
 STA     = 'W' #{E, W}
-Date    = '??????'
+Date    = '??????' #{hhmmss}
 
 Count   = 'dw' #{uw: upwind, dw:  downwind}
-
 identifier, files = FileTools.list_files (PILOT,DroneID,HAGL,OPE,PYL,STA,Date,Count)
 
 # %%% Folder for save the figures
@@ -67,7 +67,7 @@ fly_speed = float(OPE[-2:])
 
 # %%%  ACCCES DATA_ACU SINGLE EVENT
 #########
-event   = 1 # {1,2,3,4,5,6,7,8,9... nEve}
+event   = 3 # {1,2,3,4,5,6,7,8,9... nEve}
 acu_metric = 'LAFp' # LAFp, LZfp
 
 Fs, TT, DATA_raw, DATA_acu = FileTools.data_single_events (files[event-1], n_mics, acu_metric)
@@ -85,9 +85,15 @@ ax0.get_legend().set_title("Microphone")
 plt.ylabel(acu_metric + ' [dB] re $20\mu$ Pa')
 plt.xlabel('Time [s]')
 plt.tight_layout()
-# plt.savefig(identifier+'_'+'allchan_'+'Event {}'.format(event-1)+'.svg', format='svg', dpi=1200)
 plt.savefig(ffolder+'/'+identifier+'_'+'allChan_'+'Flyby{}'.format(event)+'.jpg', format='jpg',dpi=1200)
-# plt.show()
+plt.show()
+
+# %%%  Write WAV files
+#########
+import soundfile as sf
+ch_list = 5
+mic_data = DATA_raw[:,ch_list-1]
+sf.write(ffolder+'/'+identifier+"_M"+str(ch_list)+'.wav', mic_data, Fs,subtype='FLOAT')
 
 # %% ACCCES DATA_ACU ALL EVENTS ONE MICROPHONE
 Fs,TT, DATA_raw_events, DATA_acu_events = FileTools.data_all_events (files, DATA_raw, n_mics, acu_metric)
@@ -121,9 +127,9 @@ plt.savefig(ffolder+'/'+identifier+'_'+'allFlybys_'+'Chan{}'.format(microphone)+
 
 # %%
 #################################################
-""" FOR FLYOVERS
-time relatives figs """ 
-t_data = 5 #in seconds before and after of the max value
+""" FOR FLYOVERS time relatives figs """ 
+t_data = 7 #in seconds before and after of the max value
+
 DATA_mic_relative, TIME_r = TimeTools.relatived_time (DATA_mic, Fs,t_data)
 descriptive = TimeTools.descriptive_time (DATA_mic_relative, 1) #statistics
 """PLOTS same microphones, all events - relative time"""
@@ -149,21 +155,20 @@ Ymax = np.max(descriptive[:,3])+3
 
 
 fig, (ax0) = plt.subplots(figsize=(6,3))
-plt.plot(TIME_r/Fs,Y0,label='Average')#,'g-')
-plt.fill_between(TIME_r/Fs, Y0 - Y1, Y0 +Y1, alpha=0.2,label='$\pm$ std')#,color='gray', alpha=0.2)
-plt.title('Microphone {}'.format(microphone))
+plt.plot(TIME_r/Fs,Y0,label=' avg.' + acu_metric + '. sUAS: '+DroneID,linestyle=linestyle)#,'g-')
+plt.fill_between(TIME_r/Fs, Y0 - Y1, Y0 +Y1, alpha=0.2)#,label='$\pm$ std')#,color='gray', alpha=0.2)
+plt.title('Fly-bys @'+OPE[1:3]+'m/s. '+'Mic. {}'.format(microphone))
 plt.legend()
 plt.xlabel('Time relative [s]')
-plt.ylabel(acu_metric + ' [dB] re $20\mu$ Pa')
+plt.ylabel(acu_metric + ' [dB] re. $20\mu$ Pa')
 plt.tight_layout()
-plt.savefig(ffolder+'/'+identifier+'Arglevel_Chan{}'.format(microphone)+'t_rela'+'.jpg', format='jpg',dpi=1200)
+plt.savefig(ffolder+'/'+identifier+'Arglevel_@Chan{}'.format(microphone)+'t_rela'+'.jpg', format='jpg',dpi=1200)
 
 # plt.show()
 
-# %% SEL calculation from ALL EVENTS ALL MICROPHONE
-#####################################################
-""" FOR FLYOVERS
-Lmax & SEL CALCULATION by MICROPHONE"""
+# # %% SEL calculation from ALL EVENTS ALL MICROPHONE
+# #####################################################
+""" FOR FLYOVERS Lmax & SEL CALCULATION by MICROPHONE"""
 Lmax_array, SEL_k_array, SEL_def_array, Time_sel = TimeTools.SEL_calc(DATA_acu_events, Fs)
 
 Lmax_mean = np.mean(Lmax_array, axis=0)
@@ -195,7 +200,7 @@ ax0.set_ylabel('$SEL [dB]$')
 ax0.xaxis.set_ticks_position('none')
 plt.tight_layout()
 plt.savefig(ffolder+'/'+identifier+'SEL_chan_alleve'+'.jpg', format='jpg',dpi=1200)
-plt.show()
+# plt.show()
 
 #%%RESULTS
 ######################
@@ -203,6 +208,19 @@ print('results')
 print(identifier)
 RR=np.array([Lmax_mean,Lmax_std,SEL_mean,SEL_std]).T
 np.savetxt(ffolder+'/'+identifier+'LmaxSEL'+'.csv', RR, delimiter=",")
-time_SEL = np.mean(Time_sel,axis=0)[4]
-print(RR)
-print(time_SEL)
+time_SEL = np.around(np.mean(Time_sel,axis=0)[4],1)
+print(np.around(RR,1))
+print(str(time_SEL)+'[s] SEL_t at central mic')
+#%%Dictionary for configuration figures
+######################
+C_G_JAST={"identifier"  :identifier,
+          "event"       :event,
+          "acu_metric"  :acu_metric,
+          "microphone"  :microphone,
+          "t_data"      :t_data,
+          "time_SEL"    :time_SEL}
+import pickle #https://wiki.python.org/moin/UsingPickle
+# save dictionary to pickle file
+pickle.dump( C_G_JAST, open(ffolder+'/'+identifier+"_acu.p", "wb" ) )
+### read
+## AA = pickle.load( open( ffolder+'/'+identifier+"_acu.p", "rb" ) )
