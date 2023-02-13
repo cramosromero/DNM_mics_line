@@ -37,7 +37,7 @@ def SEL_def_calc (levels, Fs):
     for n in range((l//Fs)+1):
 
         tt = levels[n_0:n_f].shape[0]  #number of Lp samples
-        L[n] = 10*np.log10((1/tt)*(np.sum(10**(levels[n_0:n_f]/10)))) #Average level in tt
+        L[n] = 10*np.log10((1/tt)*(np.sum(10**(levels[n_0:n_f]/10)))) #Average level in tt couse aI have L(Fs)
         
         n_0 = n_0 + Fs
         n_f = n_f + Fs
