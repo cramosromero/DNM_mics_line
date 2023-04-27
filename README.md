@@ -1,5 +1,5 @@
 # DNM_mics_line
-Drone Noise Measurement with a ground plate microphone line.
+Drone Noise Measurement with a ground plate microphones line.
 The mais scripts are 
   DNM_acu.py -> Brief description
   DNM_bands_Lmax.py -> Acoustic metrics ust over the microphone line
